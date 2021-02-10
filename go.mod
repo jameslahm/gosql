@@ -1,3 +1,3 @@
-module github.com/jameslahm/go-sql
+module github.com/jameslahm/gosql
 
 go 1.15
