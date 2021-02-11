@@ -70,10 +70,16 @@ func parseExpressions(tokens []*lex.Token, cursor uint, delimiters []string) ([]
 
 		// ? Look for delimiters
 		token := tokens[newCursor]
+
+		var breakFlag = false
 		for _, delimiter := range delimiters {
 			if delimiter == token.Value {
+				breakFlag = true
 				break
 			}
+		}
+		if breakFlag {
+			break
 		}
 
 		// ? Look for comma
@@ -121,4 +127,149 @@ func parseToken(tokens []*lex.Token, cursor uint, kind lex.TokenKind) (*lex.Toke
 	} else {
 		return nil, cursor, false
 	}
+}
+
+func parseInsertStatement(tokens []*lex.Token, cursor uint) (*InsertStatement, uint, bool) {
+	newCursor := cursor
+
+	if !expectKeyword(tokens, newCursor, lex.InsertKeyword) {
+		return nil, cursor, false
+	}
+	newCursor++
+
+	if !expectKeyword(tokens, newCursor, lex.IntoKeyword) {
+		return nil, cursor, false
+	}
+	newCursor++
+
+	var table *lex.Token
+	var ok bool
+	if table, newCursor, ok = parseToken(tokens, newCursor, lex.IdentifierKind); !ok {
+		helpMessage(tokens, newCursor, "Expected table name")
+		return nil, cursor, false
+	}
+
+	if !expectKeyword(tokens, newCursor, lex.ValuesKeyword) {
+		helpMessage(tokens, newCursor, "Expected values")
+		return nil, cursor, false
+	}
+	newCursor++
+
+	if !expectSymbol(tokens, newCursor, lex.LeftParenSymbol) {
+		helpMessage(tokens, newCursor, "Expected (")
+		return nil, cursor, false
+	}
+	newCursor++
+
+	var exps []*Expression
+	exps, newCursor, ok = parseExpressions(tokens, newCursor, []string{")"})
+
+	if !expectSymbol(tokens, newCursor, lex.RightParenSymbol) {
+		helpMessage(tokens, newCursor, "Expected )")
+		return nil, cursor, false
+	}
+	newCursor++
+
+	return &InsertStatement{
+		values: &exps,
+		table:  *table,
+	}, newCursor, true
+}
+
+func parseCreateStatement(tokens []*lex.Token, cursor uint) (*CreateTableStatement, uint, bool) {
+	newCursor := cursor
+
+	if !expectKeyword(tokens, newCursor, lex.CreateKeyword) {
+		return nil, cursor, false
+	}
+	newCursor++
+
+	if !expectKeyword(tokens, newCursor, lex.TableKeyword) {
+		return nil, cursor, false
+	}
+	newCursor++
+
+	var table *lex.Token
+	var ok bool
+	if table, newCursor, ok = parseToken(tokens, newCursor, lex.IdentifierKind); !ok {
+		helpMessage(tokens, newCursor, "Expected table name")
+		return nil, cursor, false
+	}
+
+	if !expectSymbol(tokens, newCursor, lex.LeftParenSymbol) {
+		helpMessage(tokens, newCursor, "Expected (")
+		return nil, cursor, false
+	}
+	newCursor++
+
+	var cols []*ColumnDefinition
+	cols,newCursor,ok=parseColumnDefinitions(tokens,newCursor,[]{")"})
+	if !ok {
+		return nil,cursor,false
+	}
+
+	if !expectSymbol(tokens,newCursor,lex.RightParenSymbol){
+		helpMessage(tokens,newCursor,"Expected )")
+		return nil,cursor,false
+	}
+	newCursor++
+
+	return &CreateTableStatement{
+		Name: *table,
+		Cols: &cols,
+	}
+}
+
+func parseColumnDefinitions(tokens []*lex.Token, cursor uint, delimiters []string) ([]*ColumnDefinition, uint, bool) {
+	newCursor := cursor
+
+	var cols []*ColumnDefinition
+
+	for {
+		if uint(len(tokens)) <= newCursor {
+			return nil, cursor, false
+		}
+
+		current := tokens[newCursor]
+		newCursor++
+
+		var breakFlag = false
+		for _, delimiter := range delimiters {
+			if delimiter == current.Value {
+				breakFlag = true
+				break
+			}
+		}
+		if !breakFlag {
+			return nil, cursor, false
+		}
+
+		if len(cols) > 0 {
+			if !expectSymbol(tokens, newCursor, lex.CommaSymbol) {
+				helpMessage(tokens, newCursor, "Expected comma")
+			}
+			newCursor++
+		}
+
+		var name *lex.Token
+		var ok bool
+		name, newCursor, ok = parseToken(tokens, newCursor, lex.IdentifierKind)
+		if !ok {
+			helpMessage(tokens, newCursor, "Expected col name")
+			return nil, cursor, false
+		}
+
+		var dataType *lex.Token
+		dataType, newCursor, ok = parseToken(tokens, newCursor, lex.KeywordKind)
+		if !ok {
+			helpMessage(tokens, newCursor, "Expected col data type")
+			return nil, cursor, false
+		}
+
+		cols = append(cols, &ColumnDefinition{
+			Name:     *name,
+			DataType: *dataType,
+		})
+	}
+	return cols, newCursor, true
 }
