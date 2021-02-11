@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/jameslahm/gosql/lex"
@@ -129,7 +130,7 @@ func parseToken(tokens []*lex.Token, cursor uint, kind lex.TokenKind) (*lex.Toke
 	}
 }
 
-func parseInsertStatement(tokens []*lex.Token, cursor uint) (*InsertStatement, uint, bool) {
+func parseInsertStatement(tokens []*lex.Token, cursor uint, delimiter string) (*InsertStatement, uint, bool) {
 	newCursor := cursor
 
 	if !expectKeyword(tokens, newCursor, lex.InsertKeyword) {
@@ -176,7 +177,7 @@ func parseInsertStatement(tokens []*lex.Token, cursor uint) (*InsertStatement, u
 	}, newCursor, true
 }
 
-func parseCreateStatement(tokens []*lex.Token, cursor uint) (*CreateTableStatement, uint, bool) {
+func parseCreateStatement(tokens []*lex.Token, cursor uint, delimiters string) (*CreateTableStatement, uint, bool) {
 	newCursor := cursor
 
 	if !expectKeyword(tokens, newCursor, lex.CreateKeyword) {
@@ -203,24 +204,24 @@ func parseCreateStatement(tokens []*lex.Token, cursor uint) (*CreateTableStateme
 	newCursor++
 
 	var cols []*ColumnDefinition
-	cols,newCursor,ok=parseColumnDefinitions(tokens,newCursor,[]{")"})
+	cols, newCursor, ok = parseColumnDefinitions(tokens, newCursor, []string{")"})
 	if !ok {
-		return nil,cursor,false
+		return nil, cursor, false
 	}
 
-	if !expectSymbol(tokens,newCursor,lex.RightParenSymbol){
-		helpMessage(tokens,newCursor,"Expected )")
-		return nil,cursor,false
+	if !expectSymbol(tokens, newCursor, lex.RightParenSymbol) {
+		helpMessage(tokens, newCursor, "Expected )")
+		return nil, cursor, false
 	}
 	newCursor++
 
 	return &CreateTableStatement{
 		Name: *table,
 		Cols: &cols,
-	}
+	}, newCursor, true
 }
 
-func parseColumnDefinitions(tokens []*lex.Token, cursor uint, delimiters []string) ([]*ColumnDefinition, uint, bool) {
+func parseColumnDefinitions(tokens []*lex.Token, cursor uint, delimiters string) ([]*ColumnDefinition, uint, bool) {
 	newCursor := cursor
 
 	var cols []*ColumnDefinition
@@ -240,8 +241,8 @@ func parseColumnDefinitions(tokens []*lex.Token, cursor uint, delimiters []strin
 				break
 			}
 		}
-		if !breakFlag {
-			return nil, cursor, false
+		if breakFlag {
+			break
 		}
 
 		if len(cols) > 0 {
@@ -272,4 +273,65 @@ func parseColumnDefinitions(tokens []*lex.Token, cursor uint, delimiters []strin
 		})
 	}
 	return cols, newCursor, true
+}
+
+func parseStatement(tokens []*lex.Token, cursor uint, delimiter string) (*Statement, uint, bool) {
+	newCursor := cursor
+
+	var slct *SelectStatement
+	var ok bool
+	slct, newCursor, ok = parseSelectStatement(tokens, newCursor, ";")
+	if ok {
+		return &Statement{
+			Kind:            SelectKind,
+			SelectStatement: slct,
+		}, newCursor, true
+	}
+
+	var inst *InsertStatement
+	inst, newCursor, ok = parseInsertStatement(tokens, newCursor, ";")
+	if ok {
+		return &Statement{
+			Kind:            InsertKind,
+			InsertStatement: inst,
+		}, newCursor, true
+	}
+
+	var crst *CreateTableStatement
+	crst, newCursor, ok = parseCreateStatement(tokens, newCursor, ";")
+	if ok {
+		return &Statement{
+			CreateTableStatement: crst,
+			Kind:                 CreateTableKind,
+		}, newCursor, true
+	}
+
+	return nil, cursor, false
+}
+
+func parse(tokens []*lex.Token) (*Ast, error) {
+	var a = Ast{}
+	var cursor uint = 0
+	for cursor < uint(len(tokens)) {
+		stmt, newCursor, ok := parseStatement(tokens, cursor, ";")
+		if !ok {
+			return nil, errors.New("Failed to parse, expected statement")
+		}
+		cursor = newCursor
+
+		a.Statements = append(a.Statements, stmt)
+
+		var atLeastOneSemicolon = false
+
+		for expectSymbol(tokens, cursor, lex.SemiColonSymbol) {
+			cursor++
+			atLeastOneSemicolon = true
+		}
+
+		if !atLeastOneSemicolon {
+			return nil, errors.New("Expected semicolon delimiter between statements")
+		}
+	}
+
+	return &a, nil
 }
