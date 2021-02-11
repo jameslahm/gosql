@@ -1,37 +1,37 @@
 package lex
 
-type keyword string
+type Keyword string
 
 const (
-	selectKeyword keyword = "select"
-	fromKeyword   keyword = "from"
-	asKeyword     keyword = "as"
-	tableKeyword  keyword = "table"
-	createKeyword keyword = "create"
-	insertKeyword keyword = "insert"
-	intoKeyword   keyword = "into"
-	valuesKeyword keyword = "values"
-	intKeyword    keyword = "int"
-	textKeyword   keyword = "text"
-	whereKeyword  keyword = "where"
+	SelectKeyword Keyword = "select"
+	FromKeyword   Keyword = "from"
+	AsKeyword     Keyword = "as"
+	TableKeyword  Keyword = "table"
+	CreateKeyword Keyword = "create"
+	InsertKeyword Keyword = "insert"
+	IntoKeyword   Keyword = "into"
+	ValuesKeyword Keyword = "values"
+	IntKeyword    Keyword = "int"
+	TextKeyword   Keyword = "text"
+	WhereKeyword  Keyword = "where"
 )
 
-type symbol string
+type Symbol string
 
 const (
-	semiColonSymbol  symbol = ";"
-	asteriskSymbol   symbol = "*"
-	commaSymbol      symbol = ","
-	leftParenSymbol  symbol = "("
-	rightParenSymbol symbol = ")"
+	SemiColonSymbol  Symbol = ";"
+	AsteriskSymbol   Symbol = "*"
+	CommaSymbol      Symbol = ","
+	LeftParenSymbol  Symbol = "("
+	RightParenSymbol Symbol = ")"
 )
 
-type tokenKind uint
+type TokenKind uint
 
 const (
-	keywordKind tokenKind = iota
-	symbolKind
-	identifierKind
-	stringKind
-	numberKind
+	KeywordKind TokenKind = iota
+	SymbolKind
+	IdentifierKind
+	StringKind
+	NumberKind
 )

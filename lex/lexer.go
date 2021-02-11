@@ -23,9 +23,9 @@ func lex(source string) ([]*Token, error) {
 		}
 		hint := ""
 		if len(tokens) > 0 {
-			hint = fmt.Sprintf(" after %s", tokens[len(tokens)-1].value)
+			hint = fmt.Sprintf(" after %s", tokens[len(tokens)-1].Value)
 		}
-		return nil, fmt.Errorf("Unable to lex token%s, at %d %d", hint, cursor.loc.line, cursor.loc.col)
+		return nil, fmt.Errorf("Unable to lex token%s, at %d %d", hint, cursor.loc.Line, cursor.loc.Col)
 	}
 	return tokens, nil
 }
@@ -37,7 +37,7 @@ func lexNumber(source string, cursor Cursor) (*Token, Cursor, bool) {
 
 	for ; newCursor.pointer < uint(len(source)); newCursor.pointer++ {
 		character := source[newCursor.pointer]
-		newCursor.loc.col++
+		newCursor.loc.Col++
 
 		isDigit := character >= '0' && character <= '9'
 		isPeriod := character == '.'
@@ -76,7 +76,7 @@ func lexNumber(source string, cursor Cursor) (*Token, Cursor, bool) {
 			characterNext := source[newCursor.pointer+1]
 			if characterNext == '+' || characterNext == '-' {
 				newCursor.pointer++
-				newCursor.loc.col++
+				newCursor.loc.Col++
 			}
 			continue
 		}
@@ -90,7 +90,7 @@ func lexNumber(source string, cursor Cursor) (*Token, Cursor, bool) {
 	if newCursor.pointer == cursor.pointer {
 		return nil, cursor, false
 	}
-	return NewToken(numberKind, cursor.loc, source[cursor.pointer:newCursor.pointer]), newCursor, true
+	return NewToken(NumberKind, cursor.loc, source[cursor.pointer:newCursor.pointer]), newCursor, true
 }
 
 func lexCharacterDelimited(source string, cursor Cursor, delimiter byte) (*Token, Cursor, bool) {
@@ -100,7 +100,7 @@ func lexCharacterDelimited(source string, cursor Cursor, delimiter byte) (*Token
 	}
 
 	newCursor.pointer++
-	newCursor.loc.col++
+	newCursor.loc.Col++
 
 	var value []byte
 
@@ -108,15 +108,15 @@ func lexCharacterDelimited(source string, cursor Cursor, delimiter byte) (*Token
 		character := source[newCursor.pointer]
 		if character == delimiter {
 			if newCursor.pointer+1 >= uint(len(source)) || source[newCursor.pointer+1] != delimiter {
-				return NewToken(stringKind, cursor.loc, string(value)), newCursor, true
+				return NewToken(StringKind, cursor.loc, string(value)), newCursor, true
 			} else {
 				value = append(value, character)
 				newCursor.pointer++
-				newCursor.loc.col++
+				newCursor.loc.Col++
 			}
 		}
 		value = append(value, character)
-		newCursor.loc.col++
+		newCursor.loc.Col++
 	}
 
 	return nil, cursor, false
@@ -136,7 +136,7 @@ func longestMatch(source string, cursor Cursor, options []string) string {
 	for cursor.pointer < uint(len(source)) {
 		value = append(value, bytes.ToLower([]byte{source[cursor.pointer]})...)
 		cursor.pointer++
-		cursor.loc.col++
+		cursor.loc.Col++
 
 		for i, option := range options {
 			for _, skip := range skipList {
@@ -172,12 +172,12 @@ func lexSymbol(source string, cursor Cursor) (*Token, Cursor, bool) {
 	character := source[cursor.pointer]
 	originCursor := cursor
 	cursor.pointer++
-	cursor.loc.col++
+	cursor.loc.Col++
 
 	switch character {
 	case '\n':
-		cursor.loc.line++
-		cursor.loc.col = 0
+		cursor.loc.Line++
+		cursor.loc.Col = 0
 		fallthrough
 	case '\t':
 		fallthrough
@@ -185,12 +185,12 @@ func lexSymbol(source string, cursor Cursor) (*Token, Cursor, bool) {
 		return nil, cursor, false
 	}
 
-	symbols := []symbol{
-		commaSymbol,
-		leftParenSymbol,
-		rightParenSymbol,
-		semiColonSymbol,
-		asteriskSymbol,
+	symbols := []Symbol{
+		CommaSymbol,
+		LeftParenSymbol,
+		RightParenSymbol,
+		SemiColonSymbol,
+		AsteriskSymbol,
 	}
 
 	var options []string
@@ -205,25 +205,25 @@ func lexSymbol(source string, cursor Cursor) (*Token, Cursor, bool) {
 	}
 
 	cursor.pointer = originCursor.pointer + uint(len(match))
-	cursor.loc.col = originCursor.loc.col + len(match)
+	cursor.loc.Col = originCursor.loc.Col + len(match)
 
-	return NewToken(symbolKind, originCursor.loc, match), cursor, true
+	return NewToken(SymbolKind, originCursor.loc, match), cursor, true
 
 }
 
 func lexKeyword(source string, cursor Cursor) (*Token, Cursor, bool) {
 	originCurosr := cursor
 
-	keywords := []keyword{
-		selectKeyword,
-		fromKeyword,
-		insertKeyword,
-		intoKeyword,
-		intKeyword,
-		valuesKeyword,
-		createKeyword,
-		textKeyword,
-		whereKeyword,
+	keywords := []Keyword{
+		SelectKeyword,
+		FromKeyword,
+		InsertKeyword,
+		IntoKeyword,
+		IntKeyword,
+		ValuesKeyword,
+		CreateKeyword,
+		TextKeyword,
+		WhereKeyword,
 	}
 
 	var options []string
@@ -236,7 +236,7 @@ func lexKeyword(source string, cursor Cursor) (*Token, Cursor, bool) {
 		return nil, originCurosr, false
 	}
 
-	return NewToken(keywordKind, originCurosr.loc, match), cursor, true
+	return NewToken(KeywordKind, originCurosr.loc, match), cursor, true
 }
 
 func lexIdentifier(source string, cursor Cursor) (*Token, Cursor, bool) {
@@ -254,7 +254,7 @@ func lexIdentifier(source string, cursor Cursor) (*Token, Cursor, bool) {
 	}
 
 	newCursor.pointer++
-	newCursor.loc.col++
+	newCursor.loc.Col++
 
 	var value []byte = []byte{character}
 	for newCursor.pointer < uint(len(source)) {
@@ -264,12 +264,12 @@ func lexIdentifier(source string, cursor Cursor) (*Token, Cursor, bool) {
 		if isAlphabetical || isNumeric || character == '_' || character == '$' {
 			value = append(value, character)
 			newCursor.pointer++
-			newCursor.loc.col++
+			newCursor.loc.Col++
 			continue
 		} else {
 			break
 		}
 	}
 
-	return NewToken(identifierKind, cursor.loc, string(value)), newCursor, true
+	return NewToken(IdentifierKind, cursor.loc, string(value)), newCursor, true
 }

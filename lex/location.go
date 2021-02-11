@@ -1,13 +1,13 @@
 package lex
 
 type Location struct {
-	line int
-	col  int
+	Line int
+	Col  int
 }
 
 func NewLocation() Location {
 	return Location{
-		line: 0,
-		col:  0,
+		Line: 0,
+		Col:  0,
 	}
 }

@@ -8,3 +8,8 @@ const (
 	InsertKind
 )
 
+type ExpressKind uint
+
+const (
+	literalKind ExpressKind = iota
+)

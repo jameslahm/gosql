@@ -1,19 +1,19 @@
 package lex
 
 type Token struct {
-	kind  tokenKind
-	loc   Location
-	value string
+	Kind  TokenKind
+	Loc   Location
+	Value string
 }
 
-func NewToken(kind tokenKind, loc Location, value string) *Token {
+func NewToken(kind TokenKind, loc Location, value string) *Token {
 	return &Token{
-		kind:  kind,
-		loc:   loc,
-		value: value,
+		Kind:  kind,
+		Loc:   loc,
+		Value: value,
 	}
 }
 
 func (t *Token) equals(other *Token) bool {
-	return t.value == other.value && t.kind == other.kind
+	return t.Value == other.Value && t.Kind == other.Kind
 }
