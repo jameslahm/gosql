@@ -113,7 +113,7 @@ func parseExpression(tokens []*lex.Token, cursor uint) (*Expression, uint, bool)
 		if token, newCursor, ok := parseToken(tokens, newCursor, kind); ok {
 			return &Expression{
 				Literal: token,
-				Kind:    literalKind,
+				Kind:    LiteralKind,
 			}, newCursor, true
 		}
 	}

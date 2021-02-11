@@ -29,6 +29,6 @@ type ColumnDefinition struct {
 }
 
 type InsertStatement struct {
-	table  lex.Token
-	values *[]*Expression
+	Table  lex.Token
+	Values *[]*Expression
 }

@@ -11,5 +11,5 @@ const (
 type ExpressKind uint
 
 const (
-	literalKind ExpressKind = iota
+	LiteralKind ExpressKind = iota
 )
