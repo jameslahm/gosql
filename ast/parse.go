@@ -309,7 +309,7 @@ func parseStatement(tokens []*lex.Token, cursor uint, delimiter string) (*Statem
 	return nil, cursor, false
 }
 
-func parse(tokens []*lex.Token) (*Ast, error) {
+func Parse(tokens []*lex.Token) (*Ast, error) {
 	var a = Ast{}
 	var cursor uint = 0
 	for cursor < uint(len(tokens)) {

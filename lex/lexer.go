@@ -7,7 +7,7 @@ import (
 
 type lexer func(string, Cursor) (*Token, Cursor, bool)
 
-func lex(source string) ([]*Token, error) {
+func Lex(source string) ([]*Token, error) {
 	cursor := NewCursor(0, NewLocation())
 	lexers := []lexer{lexKeyword, lexSymbol, lexString, lexNumber, lexIdentifier}
 	tokens := []*Token{}
