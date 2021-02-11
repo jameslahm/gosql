@@ -12,15 +12,22 @@ func Lex(source string) ([]*Token, error) {
 	lexers := []lexer{lexKeyword, lexSymbol, lexString, lexNumber, lexIdentifier}
 	tokens := []*Token{}
 	for cursor.pointer < uint(len(source)) {
+		var isLexer = false
 		for _, lexer := range lexers {
 			if token, newCursor, ok := lexer(source, cursor); ok {
 				cursor = newCursor
 				if token != nil {
 					tokens = append(tokens, token)
 				}
+				isLexer = true
 				break
 			}
 		}
+
+		if isLexer {
+			continue
+		}
+
 		hint := ""
 		if len(tokens) > 0 {
 			hint = fmt.Sprintf(" after %s", tokens[len(tokens)-1].Value)
@@ -224,6 +231,8 @@ func lexKeyword(source string, cursor Cursor) (*Token, Cursor, bool) {
 		CreateKeyword,
 		TextKeyword,
 		WhereKeyword,
+		TableKeyword,
+		AsKeyword,
 	}
 
 	var options []string
@@ -232,6 +241,7 @@ func lexKeyword(source string, cursor Cursor) (*Token, Cursor, bool) {
 	}
 
 	match := longestMatch(source, originCurosr, options)
+	fmt.Printf("Match %s %s\n", source[originCurosr.pointer:], match)
 	if match == "" {
 		return nil, originCurosr, false
 	}

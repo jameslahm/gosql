@@ -172,8 +172,8 @@ func parseInsertStatement(tokens []*lex.Token, cursor uint, delimiter string) (*
 	newCursor++
 
 	return &InsertStatement{
-		values: &exps,
-		table:  *table,
+		Values: &exps,
+		Table:  *table,
 	}, newCursor, true
 }
 
@@ -221,7 +221,7 @@ func parseCreateStatement(tokens []*lex.Token, cursor uint, delimiters string) (
 	}, newCursor, true
 }
 
-func parseColumnDefinitions(tokens []*lex.Token, cursor uint, delimiters string) ([]*ColumnDefinition, uint, bool) {
+func parseColumnDefinitions(tokens []*lex.Token, cursor uint, delimiters []string) ([]*ColumnDefinition, uint, bool) {
 	newCursor := cursor
 
 	var cols []*ColumnDefinition

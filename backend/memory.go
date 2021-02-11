@@ -37,7 +37,7 @@ type MemoryBackend struct {
 
 func NewMemoryBackend() *MemoryBackend {
 	return &MemoryBackend{
-		Tables: &make(map[string]Table),
+		Tables: make(map[string]*Table),
 	}
 }
 
