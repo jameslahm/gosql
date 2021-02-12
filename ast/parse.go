@@ -18,7 +18,7 @@ func isSymbol(token *lex.Token, symbol lex.Symbol) bool {
 
 func helpMessage(tokens []*lex.Token, cursor uint, msg string) {
 	c := tokens[int(cursor)]
-	fmt.Sprintf("[%d %d]: %s, Got %s\n", c.Loc.Line, c.Loc.Col, msg, c.Value)
+	fmt.Printf("[%d %d]: %s, Got %s\n", c.Loc.Line, c.Loc.Col, msg, c.Value)
 }
 
 func expectKeyword(tokens []*lex.Token, cursor uint, keyword lex.Keyword) bool {
@@ -49,16 +49,17 @@ func parseSelectStatement(tokens []*lex.Token, cursor uint, delimiter string) (*
 	exps, newCursor, ok = parseExpressions(tokens, newCursor, []string{"from", delimiter})
 	if !ok {
 		return nil, cursor, false
-	} else {
-		slct.Items = &exps
-		if !expectKeyword(tokens, newCursor, lex.FromKeyword) {
-			helpMessage(tokens, cursor, "Expected from")
-			return nil, cursor, false
-		}
-		slct.From = *tokens[newCursor]
-		newCursor++
-		return slct, newCursor, true
 	}
+	slct.Items = &exps
+	if !expectKeyword(tokens, newCursor, lex.FromKeyword) {
+		helpMessage(tokens, cursor, "Expected from")
+		return nil, cursor, false
+	}
+	newCursor++
+	slct.From = *tokens[newCursor]
+	newCursor++
+	return slct, newCursor, true
+
 }
 
 func parseExpressions(tokens []*lex.Token, cursor uint, delimiters []string) ([]*Expression, uint, bool) {
@@ -95,7 +96,7 @@ func parseExpressions(tokens []*lex.Token, cursor uint, delimiters []string) ([]
 		// ? Add Expressions
 		var exp *Expression
 		var ok bool
-		exp, newCursor, ok = parseExpression(tokens, cursor)
+		exp, newCursor, ok = parseExpression(tokens, newCursor)
 		if !ok {
 			helpMessage(tokens, cursor, "Expected expression")
 			return nil, cursor, false
@@ -232,7 +233,6 @@ func parseColumnDefinitions(tokens []*lex.Token, cursor uint, delimiters []strin
 		}
 
 		current := tokens[newCursor]
-		newCursor++
 
 		var breakFlag = false
 		for _, delimiter := range delimiters {

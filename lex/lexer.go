@@ -115,6 +115,7 @@ func lexCharacterDelimited(source string, cursor Cursor, delimiter byte) (*Token
 		character := source[newCursor.pointer]
 		if character == delimiter {
 			if newCursor.pointer+1 >= uint(len(source)) || source[newCursor.pointer+1] != delimiter {
+				newCursor.pointer++
 				return NewToken(StringKind, cursor.loc, string(value)), newCursor, true
 			} else {
 				value = append(value, character)
@@ -146,10 +147,15 @@ func longestMatch(source string, cursor Cursor, options []string) string {
 		cursor.loc.Col++
 
 		for i, option := range options {
+			var isSkip = false
 			for _, skip := range skipList {
 				if skip == i {
-					continue
+					isSkip = true
+					break
 				}
+			}
+			if isSkip {
+				continue
 			}
 
 			if string(value) == option {
@@ -160,7 +166,7 @@ func longestMatch(source string, cursor Cursor, options []string) string {
 				}
 			}
 
-			sharePrefix := string(value) == source[:cursor.pointer-originCurosr.pointer]
+			sharePrefix := string(value) == option[:cursor.pointer-originCurosr.pointer]
 			tooLong := len(value) >= len(options)
 			if !sharePrefix || tooLong {
 				skipList = append(skipList, i)
@@ -189,7 +195,7 @@ func lexSymbol(source string, cursor Cursor) (*Token, Cursor, bool) {
 	case '\t':
 		fallthrough
 	case ' ':
-		return nil, cursor, false
+		return nil, cursor, true
 	}
 
 	symbols := []Symbol{
@@ -234,17 +240,16 @@ func lexKeyword(source string, cursor Cursor) (*Token, Cursor, bool) {
 		TableKeyword,
 		AsKeyword,
 	}
-
 	var options []string
 	for _, keyword := range keywords {
 		options = append(options, string(keyword))
 	}
-
 	match := longestMatch(source, originCurosr, options)
-	fmt.Printf("Match %s %s\n", source[originCurosr.pointer:], match)
 	if match == "" {
 		return nil, originCurosr, false
 	}
+	cursor.pointer = originCurosr.pointer + uint(len(match))
+	cursor.loc.Col = originCurosr.loc.Col + len(match)
 
 	return NewToken(KeywordKind, originCurosr.loc, match), cursor, true
 }

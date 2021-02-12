@@ -12,8 +12,8 @@ import (
 
 type MemoryCell []byte
 
-func (mc MemoryCell) AsInt() int {
-	var i int
+func (mc MemoryCell) AsInt() int32 {
+	var i int32
 	err := binary.Read(bytes.NewBuffer(mc), binary.BigEndian, &i)
 	if err != nil {
 		panic(err)
@@ -91,7 +91,7 @@ func (mb *MemoryBackend) tokenToCell(t *lex.Token) MemoryCell {
 			panic(err)
 		}
 		var buf = new(bytes.Buffer)
-		err = binary.Write(buf, binary.BigEndian, value)
+		err = binary.Write(buf, binary.BigEndian, int32(value))
 		if err != nil {
 			panic(err)
 		}

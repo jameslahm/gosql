@@ -15,7 +15,7 @@ const (
 
 type Cell interface {
 	AsText() string
-	AsInt() int
+	AsInt() int32
 }
 
 type ResultColumn struct {

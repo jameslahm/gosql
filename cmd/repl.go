@@ -52,6 +52,7 @@ func main() {
 				for _, col := range results.Columns {
 					fmt.Printf("%10s|", col.Name)
 				}
+				fmt.Println()
 				for _, row := range results.Rows {
 					fmt.Printf("|")
 					for i, cell := range row {
